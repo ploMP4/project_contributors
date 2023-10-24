@@ -1,4 +1,5 @@
 from typing import Dict
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -14,6 +15,7 @@ class UserSerializerWithToken(serializers.ModelSerializer):
             "id",
             "username",
             "email",
+            "password",
             "first_name",
             "last_name",
             "age",
@@ -21,6 +23,7 @@ class UserSerializerWithToken(serializers.ModelSerializer):
             "residence",
             "token",
         ]
+        extra_kwargs = {"password": {"write_only": True}}
 
     def get_token(self, obj: User) -> Dict[str, str]:
         refresh = RefreshToken.for_user(obj)
@@ -30,8 +33,38 @@ class UserSerializerWithToken(serializers.ModelSerializer):
             "access": str(refresh.access_token),
         }
 
+    def create(self, validated_data):
+        user = User.objects.create(
+            username=validated_data.get("username"),
+            email=validated_data.get("email"),
+            first_name=validated_data.get("first_name", ""),
+            last_name=validated_data.get("last_name", ""),
+            age=validated_data.get("age", None),
+            country=validated_data.get("country", ""),
+            residence=validated_data.get("residence", ""),
+        )
+
+        user.set_password(validated_data["password"])
+        user.save()
+
+        return user
+
 
 class SkillSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    def validate(self, data):
+        if len(data["user"].skill_set.all()) >= 3:
+            raise ValidationError("User cannot have more than 3 skills")
+
+        return data
+
     class Meta:
         model = Skill
-        fields = "__all__"
+        fields = ["user", "language", "level"]
+        extra_kwargs = {"user": {"write_only": True}}
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=Skill.objects.all(), fields=["language", "user"]
+            )
+        ]
