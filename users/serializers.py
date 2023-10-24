@@ -2,7 +2,7 @@ from typing import Dict
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import User
+from .models import Skill, User
 
 
 class UserSerializerWithToken(serializers.ModelSerializer):
@@ -29,3 +29,9 @@ class UserSerializerWithToken(serializers.ModelSerializer):
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         }
+
+
+class SkillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Skill
+        fields = "__all__"

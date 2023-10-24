@@ -3,12 +3,13 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from rest_framework.response import Response
 from rest_framework.views import APIView, status
+from rest_framework import permissions
 
-from .models import User
-from .serializers import UserSerializerWithToken
+from .models import Skill, User
+from .serializers import SkillSerializer, UserSerializerWithToken
 
 
-class RegisterUser(APIView):
+class RegisterUserView(APIView):
     def post(self, request) -> Response:
         data = request.data
 
@@ -36,3 +37,32 @@ class RegisterUser(APIView):
             return Response(
                 {"message": "User already exists"}, status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class SkillView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request) -> Response:
+        user = request.user
+        if len(user.skill_set.all()) >= 3:
+            return Response(
+                {"message": "User cannot have more than 3 skills"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        data = request.data
+        skill = Skill(
+            user=user,
+            language=data["language"],
+            level=data["level"],
+        )
+
+        try:
+            skill.full_clean()
+            skill.save()
+
+            serializer = SkillSerializer(skill, many=False)
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except ValidationError as error:
+            return Response({"message": error}, status=status.HTTP_400_BAD_REQUEST)
