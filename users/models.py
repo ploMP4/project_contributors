@@ -3,9 +3,10 @@ from django.contrib.auth.models import AbstractUser
 
 
 class User(AbstractUser):
-    age = models.IntegerField(null=True)
-    country = models.CharField(max_length=255, null=True)
-    residence = models.CharField(max_length=255, null=True)
+    email = models.EmailField(blank=True, unique=True)
+    age = models.IntegerField(null=True, blank=True)
+    country = models.CharField(max_length=255, null=True, blank=True)
+    residence = models.CharField(max_length=255, null=True, blank=True)
 
 
 class Skill(models.Model):
