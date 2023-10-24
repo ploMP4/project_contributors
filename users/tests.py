@@ -5,7 +5,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from .views import RegisterUserView, SkillView
+from .views import DeleteSkillView, RegisterUserView, CreateSkillView
 from .models import Language, Level, Skill, User
 
 
@@ -117,7 +117,7 @@ class SkillTests(APITestCase):
         )
 
     def test_skill_create(self):
-        view = SkillView.as_view()
+        view = CreateSkillView.as_view()
         url = reverse("skill")
 
         data = {"language": Language.PYTHON, "level": Level.EXPERIENCED}
@@ -129,7 +129,7 @@ class SkillTests(APITestCase):
         self.assertEqual(response.status_code, 201, response.data)
 
     def test_skill_create_unauthenticated(self):
-        view = SkillView.as_view()
+        view = CreateSkillView.as_view()
         url = reverse("skill")
 
         data = {"language": "python", "level": "experienced"}
@@ -140,7 +140,7 @@ class SkillTests(APITestCase):
         self.assertEqual(response.status_code, 401, response.data)
 
     def test_skill_create_not_available_language(self):
-        view = SkillView.as_view()
+        view = CreateSkillView.as_view()
         url = reverse("skill")
 
         data = {"language": "random-language", "level": "expert"}
@@ -152,7 +152,7 @@ class SkillTests(APITestCase):
         self.assertEqual(response.status_code, 400, response.data)
 
     def test_skill_create_not_available_level(self):
-        view = SkillView.as_view()
+        view = CreateSkillView.as_view()
         url = reverse("skill")
 
         # Try creating a skill with a different level than the ones available
@@ -165,7 +165,7 @@ class SkillTests(APITestCase):
         self.assertEqual(response.status_code, 400, response.data)
 
     def test_skill_create_duplicate(self):
-        view = SkillView.as_view()
+        view = CreateSkillView.as_view()
         url = reverse("skill")
 
         Skill.objects.create(
@@ -181,7 +181,7 @@ class SkillTests(APITestCase):
         self.assertEqual(response.status_code, 400, response.data)
 
     def test_skill_create_more_that_three(self):
-        view = SkillView.as_view()
+        view = CreateSkillView.as_view()
         url = reverse("skill")
 
         Skill.objects.create(
@@ -201,3 +201,17 @@ class SkillTests(APITestCase):
         response = view(request)
 
         self.assertEqual(response.status_code, 400, response.data)
+
+    def test_skill_delete(self):
+        view = DeleteSkillView.as_view()
+        url = reverse("skill_delete", kwargs={"pk": 1})
+
+        Skill.objects.create(
+            user=self.user, language=Language.PYTHON, level=Level.EXPERIENCED
+        )
+
+        request = self.factory.delete(url, format="json")
+        force_authenticate(request, user=self.user)
+        response = view(request, pk=1)
+
+        self.assertEqual(response.status_code, 204, response.data)
