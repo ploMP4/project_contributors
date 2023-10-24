@@ -31,3 +31,6 @@ class Skill(models.Model):
     level = models.CharField(
         max_length=255, choices=Level.choices, default=Level.BEGINNER
     )
+
+    def __str__(self):
+        return self.language
