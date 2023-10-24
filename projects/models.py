@@ -14,3 +14,8 @@ class Project(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["owner", "name"], name="unique name"),
+        ]
