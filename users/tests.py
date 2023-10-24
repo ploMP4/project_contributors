@@ -18,73 +18,79 @@ class UserTests(APITestCase):
 
     def test_register(self):
         view = RegisterUserView.as_view()
+        url = reverse("register")
 
         data = {
             "username": "test_user",
             "email": "test-user@mail.com",
             "password": "1234",
         }
-        request = self.factory.post("/api/users/register/", data, format="json")
+        request = self.factory.post(url, data, format="json")
         response = view(request)
 
         self.assertEqual(response.status_code, 201, response.data)
 
     def test_register_existing_email(self):
         view = RegisterUserView.as_view()
+        url = reverse("register")
 
         data = {
             "username": "test_user",
             "email": "bob@mail.com",  # Existing email
             "password": "password",
         }
-        request = self.factory.post("/api/users/register/", data, format="json")
+        request = self.factory.post(url, data, format="json")
         response = view(request)
 
         self.assertEqual(response.status_code, 400, response.data)
 
     def test_register_non_valid_email(self):
         view = RegisterUserView.as_view()
+        url = reverse("register")
 
         data = {
             "username": "test_user",
             "email": "not-an-email",  # Invalid email
             "password": "password",
         }
-        request = self.factory.post("/api/users/register/", data, format="json")
+        request = self.factory.post(url, data, format="json")
         response = view(request)
 
         self.assertEqual(response.status_code, 400, response.data)
 
     def test_register_existing_username(self):
         view = RegisterUserView.as_view()
+        url = reverse("register")
 
         data = {
             "username": "bob",  # Existing username
             "email": "test@mail.com",
             "password": "password",
         }
-        request = self.factory.post("/api/users/register/", data, format="json")
+        request = self.factory.post(url, data, format="json")
         response = view(request)
 
         self.assertEqual(response.status_code, 400, response.data)
 
     def test_login(self):
         view = TokenObtainPairView.as_view()
+        url = reverse("login")
 
         data = {
             "username": "bob",
             "password": "password",
         }
-        request = self.factory.post("/api/users/login/", data, format="json")
+        request = self.factory.post(url, data, format="json")
         response = view(request)
 
         self.assertEqual(response.status_code, 200, response.data)
 
         # Test Refresh Token
-        data = response.data
-
         view = TokenRefreshView.as_view()
-        request = self.factory.post("/api/users/token/refresh/", data, format="json")
+        url = reverse("token_refresh")
+
+        data = response.data
+        request = self.factory.post(url, data, format="json")
         response = view(request)
 
         self.assertEqual(response.status_code, 200, response.data)
