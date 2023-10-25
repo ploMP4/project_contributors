@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Any, Dict
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -33,7 +33,7 @@ class UserSerializerWithToken(serializers.ModelSerializer):
             "access": str(refresh.access_token),
         }
 
-    def create(self, validated_data):
+    def create(self, validated_data: Dict[Any, Any]) -> User:
         user = User.objects.create(
             username=validated_data.get("username"),
             email=validated_data.get("email"),
@@ -53,7 +53,7 @@ class UserSerializerWithToken(serializers.ModelSerializer):
 class SkillSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
-    def validate(self, data):
+    def validate(self, data: Dict[Any, Any]) -> Dict[Any, Any]:
         if len(data["user"].skill_set.all()) >= 3:
             raise ValidationError("User cannot have more than 3 skills")
 
@@ -61,7 +61,7 @@ class SkillSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Skill
-        fields = ["user", "language", "level"]
+        fields = "__all__"
         extra_kwargs = {"user": {"write_only": True}}
         validators = [
             serializers.UniqueTogetherValidator(
