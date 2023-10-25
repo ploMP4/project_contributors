@@ -20,3 +20,15 @@ class Project(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["owner", "name"], name="unique name"),
         ]
+
+
+class Application(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "user"], name="unique application"
+            ),
+        ]
