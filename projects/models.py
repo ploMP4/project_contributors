@@ -32,3 +32,6 @@ class Application(models.Model):
                 fields=["project", "user"], name="unique application"
             ),
         ]
+
+    def __str__(self):
+        return f"{self.project.name} - {self.user.username}"
