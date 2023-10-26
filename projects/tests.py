@@ -18,6 +18,29 @@ class ProjectTests(APITestCase):
             password="password",
         )
 
+    def test_project_list(self):
+        view = ListCreateProjectView().as_view()
+        url = reverse("project_list_create")
+
+        user_mike = User.objects.create_user(
+            username="mike",
+            email="mike@mail.com",
+            password="password",
+        )
+
+        Project.objects.create(owner=self.user, name="Project 1")
+        Project.objects.create(
+            owner=self.user,
+            name="Project 2",
+            maximum_collaborators=1,
+        ).collaborators.set([user_mike])
+
+        request = self.factory.get(url, format="json")
+        response = view(request)
+
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(len(response.data), 1, response.data)
+
     def test_project_create(self):
         view = ListCreateProjectView().as_view()
         url = reverse("project_list_create")
