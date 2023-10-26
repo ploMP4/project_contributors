@@ -2,12 +2,12 @@ from django.urls import path
 
 from .views import (
     CreateApplicationView,
-    CreateProjectView,
+    ListCreateProjectView,
     RetrieveUpdateDeleteProjectView,
 )
 
 urlpatterns = [
-    path("", CreateProjectView.as_view(), name="project_create"),
+    path("", ListCreateProjectView.as_view(), name="project_create"),
     path(
         "<int:pk>/",
         RetrieveUpdateDeleteProjectView.as_view(),
