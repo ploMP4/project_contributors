@@ -22,11 +22,11 @@ class ListCreateProjectView(ListCreateAPIView):
 
 
 class RetrieveUpdateDeleteProjectView(RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     serializer_class = ProjectSerializer
 
     def get_queryset(self):
-        queryset = Project.objects.filter(id=self.kwargs["pk"], owner=self.request.user)
+        queryset = Project.objects.filter(id=self.kwargs["pk"])
         return queryset
 
 

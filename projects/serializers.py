@@ -8,6 +8,14 @@ from .models import Application, Project
 class ProjectSerializer(serializers.ModelSerializer):
     owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
+    def to_representation(self, instance):
+        collaborators = instance.collaborators.values("username")
+        creator = instance.owner.username
+        data = super().to_representation(instance)
+        data["collaborators"] = collaborators
+        data["creator"] = creator
+        return data
+
     class Meta:
         model = Project
         fields = "__all__"
