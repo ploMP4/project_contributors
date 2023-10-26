@@ -2,7 +2,7 @@ from rest_framework import permissions
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView
 
 from .models import Project
-from .serializers import ProjectSerializer
+from .serializers import ApplicationSerializer, ProjectSerializer
 
 
 class CreateProjectView(CreateAPIView):
@@ -17,3 +17,8 @@ class RetrieveUpdateDeleteProjectView(RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         queryset = Project.objects.filter(id=self.kwargs["pk"], owner=self.request.user)
         return queryset
+
+
+class CreateApplicationView(ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ApplicationSerializer
