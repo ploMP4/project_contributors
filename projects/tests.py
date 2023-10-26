@@ -1,11 +1,11 @@
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIRequestFactory, force_authenticate
 from projects.views import (
-    CreateApplicationView,
+    ListCreateApplicationView,
     ListCreateProjectView,
     RetrieveUpdateDeleteProjectView,
 )
-from users.models import User
+from users.models import Language, Level, Skill, User
 from .models import Application, Project
 
 
@@ -123,9 +123,32 @@ class ApplicationTests(APITestCase):
         )
         self.demo_project = Project.objects.create(name="Demo Project", owner=self.user)
 
+    def test_application_list(self):
+        view = ListCreateApplicationView().as_view()
+        url = reverse("application_list_create")
+
+        user_mike = User.objects.create_user(
+            username="mike",
+            email="mike@mail.com",
+            password="password",
+        )
+        Skill.objects.create(
+            user=user_mike,
+            language=Language.PYTHON,
+            level=Level.EXPERIENCED,
+        )
+        Application.objects.create(user=user_mike, project=self.demo_project)
+
+        request = self.factory.get(url, format="json")
+        force_authenticate(request, user=self.user)
+        response = view(request)
+
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(len(response.data), 1, response.data)
+
     def test_application_create(self):
-        view = CreateApplicationView().as_view()
-        url = reverse("application_create")
+        view = ListCreateApplicationView().as_view()
+        url = reverse("application_list_create")
 
         user_mike = User.objects.create_user(
             username="mike",
@@ -140,8 +163,8 @@ class ApplicationTests(APITestCase):
         self.assertEqual(response.status_code, 201, response.data)
 
     def test_application_by_project_owner(self):
-        view = CreateApplicationView().as_view()
-        url = reverse("application_create")
+        view = ListCreateApplicationView().as_view()
+        url = reverse("application_list_create")
 
         data = {"project": self.demo_project.id}
         request = self.factory.post(url, data, format="json")
@@ -151,8 +174,8 @@ class ApplicationTests(APITestCase):
         self.assertEqual(response.status_code, 400, response.data)
 
     def test_application_create_duplicate(self):
-        view = CreateApplicationView().as_view()
-        url = reverse("application_create")
+        view = ListCreateApplicationView().as_view()
+        url = reverse("application_list_create")
 
         user_mike = User.objects.create_user(
             username="mike",
