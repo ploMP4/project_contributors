@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .views import (
-    CreateApplicationView,
+    ListCreateApplicationView,
     ListCreateProjectView,
     RetrieveUpdateDeleteProjectView,
 )
@@ -13,5 +13,9 @@ urlpatterns = [
         RetrieveUpdateDeleteProjectView.as_view(),
         name="project_get_update_delete",
     ),
-    path("application/", CreateApplicationView.as_view(), name="application_create"),
+    path(
+        "application/",
+        ListCreateApplicationView.as_view(),
+        name="application_list_create",
+    ),
 ]

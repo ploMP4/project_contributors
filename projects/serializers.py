@@ -27,6 +27,17 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
         return data
 
+    def to_representation(self, instance):
+        data = {
+            "id": instance.id,
+            "project_id": instance.project.id,
+            "project_name": instance.project.name,
+            "username": instance.user.username,
+            "email": instance.user.email,
+            "skills": instance.user.skill_set.values("language", "level"),
+        }
+        return data
+
     class Meta:
         model = Application
         fields = "__all__"

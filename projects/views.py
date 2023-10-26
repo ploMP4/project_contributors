@@ -3,7 +3,7 @@ from django.db.models.query import Prefetch
 from rest_framework import permissions
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 
-from .models import Project
+from .models import Project, Application
 from .serializers import ApplicationSerializer, ProjectSerializer
 
 
@@ -30,6 +30,11 @@ class RetrieveUpdateDeleteProjectView(RetrieveUpdateDestroyAPIView):
         return queryset
 
 
-class CreateApplicationView(ListCreateAPIView):
+class ListCreateApplicationView(ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ApplicationSerializer
+
+    def get_queryset(self):
+        queryset = Application.objects.filter(project__owner=self.request.user)
+
+        return queryset
