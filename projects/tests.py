@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework.test import APITestCase, APIRequestFactory, force_authenticate
 from projects.views import (
     CreateApplicationView,
-    CreateProjectView,
+    ListCreateProjectView,
     RetrieveUpdateDeleteProjectView,
 )
 from users.models import User
@@ -19,8 +19,8 @@ class ProjectTests(APITestCase):
         )
 
     def test_project_create(self):
-        view = CreateProjectView().as_view()
-        url = reverse("project_create")
+        view = ListCreateProjectView().as_view()
+        url = reverse("project_list_create")
 
         user_mike = User.objects.create_user(
             username="mike",
@@ -39,8 +39,8 @@ class ProjectTests(APITestCase):
         self.assertEqual(response.status_code, 201, response.data)
 
     def test_project_create_duplicate(self):
-        view = CreateProjectView().as_view()
-        url = reverse("project_create")
+        view = ListCreateProjectView().as_view()
+        url = reverse("project_list_create")
 
         Project.objects.create(
             owner=self.user,
