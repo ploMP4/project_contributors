@@ -13,7 +13,7 @@ class ListCreateProjectView(ListCreateAPIView):
 
     def get_queryset(self):
         queryset = (
-            Project.objects.prefetch_related(Prefetch("collaborators__count"))
+            Project.objects.prefetch_related(Prefetch("collaborators"))
             .annotate(Count("collaborators"))
             .filter(collaborators__count__lt=F("maximum_collaborators"))
         )
