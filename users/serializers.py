@@ -1,5 +1,4 @@
 from typing import Any, Dict
-from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -55,7 +54,7 @@ class SkillSerializer(serializers.ModelSerializer):
 
     def validate(self, data: Dict[Any, Any]) -> Dict[Any, Any]:
         if len(data["user"].skill_set.all()) >= 3:
-            raise ValidationError("User cannot have more than 3 skills")
+            raise serializers.ValidationError("User cannot have more than 3 skills")
 
         return data
 

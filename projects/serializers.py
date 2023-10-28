@@ -1,8 +1,7 @@
 from typing import Any, Dict
-from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
-from .models import Application, Project
+from .models import Application, ApplicationStatus, Project
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -30,14 +29,28 @@ class ApplicationSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     def validate(self, data: Dict[Any, Any]) -> Dict[Any, Any]:
-        if data["project"].owner == data["user"]:
-            raise ValidationError("User cannot apply to his own project")
+        if data.get("project") and data.get("user"):
+            if data["project"].owner == data["user"]:
+                raise serializers.ValidationError(
+                    "User cannot apply to his own project"
+                )
 
         return data
+
+    def create(self, validated_data):
+        validated_data["status"] = ApplicationStatus.PENDING
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if validated_data["status"] == ApplicationStatus.ACCEPTED:
+            instance.project.collaborators.add(instance.user)
+
+        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         data = {
             "id": instance.id,
+            "status": instance.status,
             "project_id": instance.project.id,
             "project_name": instance.project.name,
             "username": instance.user.username,

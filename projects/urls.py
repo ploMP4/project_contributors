@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     ListCreateApplicationView,
     ListCreateProjectView,
+    RetrieveUpdateDeleteApplicationView,
     RetrieveUpdateDeleteProjectView,
 )
 
@@ -17,5 +18,10 @@ urlpatterns = [
         "application/",
         ListCreateApplicationView.as_view(),
         name="application_list_create",
+    ),
+    path(
+        "application/<int:pk>/",
+        RetrieveUpdateDeleteApplicationView.as_view(),
+        name="application_retrieve_update_delete",
     ),
 ]

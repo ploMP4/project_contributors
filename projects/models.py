@@ -22,9 +22,20 @@ class Project(models.Model):
         ]
 
 
+class ApplicationStatus(models.TextChoices):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    DECLINED = "declined"
+
+
 class Application(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    status = models.CharField(
+        max_length=255,
+        choices=ApplicationStatus.choices,
+        default=ApplicationStatus.PENDING,
+    )
 
     class Meta:
         constraints = [
