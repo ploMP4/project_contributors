@@ -1,9 +1,37 @@
-from rest_framework.generics import CreateAPIView, DestroyAPIView
-from rest_framework import permissions
+from django.db.models import Count, ObjectDoesNotExist
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.urls import reverse
+from rest_framework.exceptions import ValidationError
+from rest_framework.generics import (
+    CreateAPIView,
+    DestroyAPIView,
+    RetrieveAPIView,
+)
+from rest_framework import permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from users.models import Skill
+from project_contributors import settings
 
-from .serializers import SkillSerializer, UserSerializerWithToken
+from .models import Skill, User
+from .serializers import (
+    SkillSerializer,
+    UserSerializerWithStats,
+    UserSerializerWithToken,
+)
+
+
+class RetrieveUserWithStatsView(RetrieveAPIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = UserSerializerWithStats
+
+    def get_queryset(self):
+        queryset = (
+            User.objects.filter(id=self.kwargs["pk"])
+            .annotate(projects_created=Count("project"))
+            .annotate(projects_contributed=Count("collaborator_set"))
+        )
+        return queryset
 
 
 class RegisterUserView(CreateAPIView):
@@ -18,7 +46,6 @@ class CreateSkillView(CreateAPIView):
 
 class DeleteSkillView(DestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = SkillSerializer
 
     def get_queryset(self):
         queryset = Skill.objects.filter(id=self.kwargs["pk"], user=self.request.user)

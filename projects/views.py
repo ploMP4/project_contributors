@@ -70,6 +70,6 @@ class RetrieveUpdateDeleteApplicationView(RetrieveUpdateDestroyAPIView):
         because we only want to modify the application's status and no other field.
         """
         return Response(
-            {"message": "put request is not allowed"},
+            {"message": "Method is not allowed"},
             status=status.HTTP_400_BAD_REQUEST,
         )

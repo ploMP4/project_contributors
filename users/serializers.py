@@ -5,6 +5,31 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Skill, User
 
 
+class UserSerializerWithStats(serializers.ModelSerializer):
+    projects_created = serializers.IntegerField(read_only=True)
+    projects_contributed = serializers.IntegerField(read_only=True)
+    skills = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "age",
+            "country",
+            "residence",
+            "projects_created",
+            "projects_contributed",
+            "skills",
+        ]
+
+    def get_skills(self, instance: User) -> Dict[str, str]:
+        return instance.skill_set.values("language", "level")
+
+
 class UserSerializerWithToken(serializers.ModelSerializer):
     token = serializers.SerializerMethodField(read_only=True)
 
@@ -24,8 +49,8 @@ class UserSerializerWithToken(serializers.ModelSerializer):
         ]
         extra_kwargs = {"password": {"write_only": True}}
 
-    def get_token(self, obj: User) -> Dict[str, str]:
-        refresh = RefreshToken.for_user(obj)
+    def get_token(self, instance: User) -> Dict[str, str]:
+        refresh = RefreshToken.for_user(instance)
 
         return {
             "refresh": str(refresh),
