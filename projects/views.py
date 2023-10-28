@@ -13,6 +13,9 @@ class ListCreateProjectView(ListCreateAPIView):
     serializer_class = ProjectSerializer
 
     def get_queryset(self):
+        """
+        Return to the user only the projects that have open seats
+        """
         queryset = (
             Project.objects.prefetch_related(Prefetch("collaborators"))
             .annotate(Count("collaborators"))
@@ -36,7 +39,13 @@ class ListCreateApplicationView(ListCreateAPIView):
     serializer_class = ApplicationSerializer
 
     def get_queryset(self):
-        queryset = Application.objects.filter(project__owner=self.request.user)
+        """
+        A user can only see applications made by him or applications that
+        are for a project he owns
+        """
+        queryset = Application.objects.filter(
+            Q(project__owner=self.request.user) | Q(user=self.request.user)
+        )
         return queryset
 
 
@@ -45,6 +54,10 @@ class RetrieveUpdateDeleteApplicationView(RetrieveUpdateDestroyAPIView):
     serializer_class = ApplicationSerializer
 
     def get_queryset(self):
+        """
+        A user can only see/modify applications made by him or applications that
+        are for a project he owns
+        """
         queryset = Application.objects.filter(
             Q(id=self.kwargs["pk"]),
             Q(project__owner=self.request.user) | Q(user=self.request.user),
@@ -52,6 +65,10 @@ class RetrieveUpdateDeleteApplicationView(RetrieveUpdateDestroyAPIView):
         return queryset
 
     def put(self, request, *args, **kwargs):
+        """
+        Overwrite put method implementation of the generic APIView to not allow it,
+        because we only want to modify the application's status and no other field.
+        """
         return Response(
             {"message": "put request is not allowed"},
             status=status.HTTP_400_BAD_REQUEST,

@@ -8,6 +8,10 @@ class ProjectSerializer(serializers.ModelSerializer):
     owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     def to_representation(self, instance):
+        """
+        Display the usernames of the project's creator and collaborators
+        instead of their id's.
+        """
         collaborators = instance.collaborators.values("username")
         creator = instance.owner.username
         data = super().to_representation(instance)
@@ -43,6 +47,9 @@ class ApplicationSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
+        if validated_data.get("project") or validated_data.get("user"):
+            raise serializers.ValidationError("Only status field is editable")
+
         if validated_data["status"] == ApplicationStatus.ACCEPTED:
             instance.project.collaborators.add(instance.user)
 
