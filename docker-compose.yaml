@@ -9,3 +9,15 @@ services:
     ports:
       - "8000:8000"
     restart: always
+    environment:
+      EMAIL_HOST: "mailhog"
+      EMAIL_PORT: "1025"
+      EMAIL_HOST_USER: "projectcontrib@mail.com"
+    depends_on:
+      - mailhog
+  mailhog:
+    image: "mailhog/mailhog:latest"
+    ports:
+      - "8025:8025" # HTTP server
+      - "1025:1025" # SMTP server
+    restart: always
