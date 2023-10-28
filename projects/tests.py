@@ -3,6 +3,7 @@ from rest_framework.test import APITestCase, APIRequestFactory, force_authentica
 from projects.views import (
     ListCreateApplicationView,
     ListCreateProjectView,
+    RetrieveUpdateDeleteApplicationView,
     RetrieveUpdateDeleteProjectView,
 )
 from users.models import Language, Level, Skill, User
@@ -190,3 +191,48 @@ class ApplicationTests(APITestCase):
         response = view(request)
 
         self.assertEqual(response.status_code, 400, response.data)
+
+    def test_application_retrieve(self):
+        view = RetrieveUpdateDeleteApplicationView().as_view()
+        url = reverse("application_retrieve_update_delete", kwargs={"pk": 1})
+
+        user_mike = User.objects.create_user(
+            username="mike",
+            email="mike@mail.com",
+            password="password",
+        )
+        Application.objects.create(user=user_mike, project=self.demo_project)
+
+        request = self.factory.get(url, format="json")
+        force_authenticate(request, user=self.user)
+        response = view(request, pk=1)
+
+        self.assertEqual(response.status_code, 200, response.data)
+
+        request = self.factory.get(url, format="json")
+        force_authenticate(request, user=user_mike)
+        response = view(request, pk=1)
+
+        self.assertEqual(response.status_code, 200, response.data)
+
+    def test_application_retrieve_fail(self):
+        view = RetrieveUpdateDeleteApplicationView().as_view()
+        url = reverse("application_retrieve_update_delete", kwargs={"pk": 1})
+
+        user_mike = User.objects.create_user(
+            username="mike",
+            email="mike@mail.com",
+            password="password",
+        )
+        user_rob = User.objects.create_user(
+            username="rob",
+            email="rob@mail.com",
+            password="password",
+        )
+        Application.objects.create(user=user_mike, project=self.demo_project)
+
+        request = self.factory.get(url, format="json")
+        force_authenticate(request, user=user_rob)
+        response = view(request, pk=1)
+
+        self.assertEqual(response.status_code, 404, response.data)
