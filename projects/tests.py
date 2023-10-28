@@ -7,7 +7,7 @@ from projects.views import (
     RetrieveUpdateDeleteProjectView,
 )
 from users.models import Language, Level, Skill, User
-from .models import Application, Project
+from .models import Application, ApplicationStatus, Project
 
 
 class ProjectTests(APITestCase):
@@ -236,3 +236,43 @@ class ApplicationTests(APITestCase):
         response = view(request, pk=1)
 
         self.assertEqual(response.status_code, 404, response.data)
+
+    def test_application_accept(self):
+        view = RetrieveUpdateDeleteApplicationView().as_view()
+        url = reverse("application_retrieve_update_delete", kwargs={"pk": 1})
+
+        user_mike = User.objects.create_user(
+            username="mike",
+            email="mike@mail.com",
+            password="password",
+        )
+        Application.objects.create(user=user_mike, project=self.demo_project)
+
+        data = {"status": ApplicationStatus.ACCEPTED}
+        request = self.factory.patch(url, data, format="json")
+        force_authenticate(request, user=self.user)
+        response = view(request, pk=1)
+
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(
+            self.demo_project.collaborators.get(username="mike"),
+            user_mike,
+            response.data,
+        )
+
+    def test_project_delete(self):
+        view = RetrieveUpdateDeleteApplicationView().as_view()
+        url = reverse("application_retrieve_update_delete", kwargs={"pk": 1})
+
+        user_mike = User.objects.create_user(
+            username="mike",
+            email="mike@mail.com",
+            password="password",
+        )
+        Application.objects.create(user=user_mike, project=self.demo_project)
+
+        request = self.factory.delete(url, format="json")
+        force_authenticate(request, user=self.user)
+        response = view(request, pk=1)
+
+        self.assertEqual(response.status_code, 204, response.data)

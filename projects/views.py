@@ -40,7 +40,6 @@ class ListCreateApplicationView(ListCreateAPIView):
         return queryset
 
 
-# TODO: Write tests for update status
 class RetrieveUpdateDeleteApplicationView(RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ApplicationSerializer
