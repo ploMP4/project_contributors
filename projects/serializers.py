@@ -29,11 +29,12 @@ class ApplicationSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     def validate(self, data: Dict[Any, Any]) -> Dict[Any, Any]:
-        if data.get("project") and data.get("user"):
-            if data["project"].owner == data["user"]:
-                raise serializers.ValidationError(
-                    "User cannot apply to his own project"
-                )
+        if (
+            data.get("project")
+            and data.get("user")
+            and data["project"].owner == data["user"]
+        ):
+            raise serializers.ValidationError("User cannot apply to his own project")
 
         return data
 
