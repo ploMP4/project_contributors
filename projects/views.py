@@ -28,9 +28,15 @@ class RetrieveUpdateDeleteProjectView(RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     serializer_class = ProjectSerializer
 
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Overwrite queryset so anyone can retrieve a project not just the project owner
+        """
+        self.get_queryset = lambda: Project.objects.filter(id=kwargs["pk"])
+        return super().retrieve(request, *args, **kwargs)
+
     def get_queryset(self):
-        queryset = Project.objects.filter(id=self.kwargs["pk"])
-        return queryset
+        return Project.objects.filter(id=self.kwargs["pk"], owner=self.request.user)
 
 
 class ListCreateApplicationView(ListCreateAPIView):
