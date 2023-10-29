@@ -3,6 +3,336 @@ info:
   title: Project Contributors
   version: 1.0.0
 paths:
+  /api/user/register/:
+    post:
+      operationId: user_register_create
+      description: "Register a new user"
+      tags:
+        - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/UserSerializerWithToken"
+              properties:
+                token:
+                  readOnly: true
+          application/x-www-form-urlencoded:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/UserSerializerWithToken"
+              properties:
+                token:
+                  readOnly: true
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/UserSerializerWithToken"
+              properties:
+                token:
+                  readOnly: true
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSerializerWithToken"
+          description: ""
+        "400":
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+          description: ""
+  /api/user/login/:
+    post:
+      operationId: user_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+        - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TokenObtainPair"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/TokenObtainPair"
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/TokenObtainPair"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenObtainPair"
+          description: ""
+        "401":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    default: "No active account found with the given credentials"
+          description: ""
+  /api/user/token/refresh/:
+    post:
+      operationId: user_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+        - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TokenRefresh"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/TokenRefresh"
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/TokenRefresh"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenRefresh"
+          description: ""
+        "400":
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+          description: ""
+        "401":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    default: "Token is invalid or expired"
+                  code:
+                    type: string
+                    default: "token_not_valid"
+          description: ""
+  /api/user/{id}/stats/:
+    get:
+      operationId: user_stats_retrieve
+      description: "Retrieve a user with some extra stats"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      tags:
+        - user
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSerializerWithStats"
+          description: ""
+        "404":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    default: "Not found."
+          description: ""
+  /api/user/password-reset/:
+    post:
+      operationId: user_password_reset_create
+      description: |-
+        Send an email to the user containing a url with a PasswordResetToken
+        to send a patch request to with the new password
+      tags:
+        - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    default: "Email has been sent to user@example.com"
+          description: ""
+        "404":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    default: "Not found."
+          description: ""
+  /api/user/password-reset/{id}/{token}/:
+    patch:
+      operationId: user_password_reset_partial_update
+      description: |-
+        Validate the PasswordResetToken and set the new password
+        provided by the user
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: token
+          schema:
+            type: string
+          required: true
+      tags:
+        - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    default: "Password reset successfully"
+          description: ""
+        "400":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+          description: ""
+  /api/user/skill/:
+    post:
+      operationId: user_skill_create
+      description: "Create a skill for a user"
+      tags:
+        - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Skill"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Skill"
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/Skill"
+      security:
+        - jwtAuth: []
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Skill"
+          description: ""
+        "400":
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+          description: ""
+  /api/user/skill/{id}/:
+    delete:
+      operationId: user_skill_destroy
+      description: "Delete a users skill"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      tags:
+        - user
+      security:
+        - jwtAuth: []
+      responses:
+        "204":
+          description: No response body
+        "404":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    default: "Not found."
+          description: ""
   /api/project/:
     get:
       operationId: project_list
@@ -27,13 +357,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ProjectCreate"
+              $ref: "#/components/schemas/PatchedProject"
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/ProjectCreate"
+              $ref: "#/components/schemas/PatchedProject"
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/ProjectCreate"
+              $ref: "#/components/schemas/PatchedProject"
         required: true
       security:
         - jwtAuth: []
@@ -88,6 +418,7 @@ paths:
           description: ""
     put:
       operationId: project_update
+      description: "Update a project with the provided values"
       parameters:
         - in: path
           name: id
@@ -100,13 +431,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ProjectCreate"
+              $ref: "#/components/schemas/PatchedProject"
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/ProjectCreate"
+              $ref: "#/components/schemas/PatchedProject"
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/ProjectCreate"
+              $ref: "#/components/schemas/PatchedProject"
         required: true
       security:
         - jwtAuth: []
@@ -142,6 +473,7 @@ paths:
           description: ""
     patch:
       operationId: project_partial_update
+      description: "Update a project with the provided values"
       parameters:
         - in: path
           name: id
@@ -170,8 +502,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/Project"
           description: ""
+        "400":
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+          description: ""
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+          description: ""
+        "404":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    default: "Not found."
+          description: ""
     delete:
       operationId: project_destroy
+      description: "Delete a project with the provided id"
       parameters:
         - in: path
           name: id
@@ -185,9 +541,26 @@ paths:
       responses:
         "204":
           description: No response body
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+          description: ""
+        "404":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    default: "Not found."
+          description: ""
   /api/project/application/:
     get:
       operationId: project_application_list
+      description: "List applications created by the authorized user or that are for a project he owns"
       tags:
         - project
       security:
@@ -199,23 +572,42 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Application"
+                  $ref: "#/components/schemas/ApplicationGet"
+          description: ""
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
           description: ""
     post:
       operationId: project_application_create
+      description: "Create an application to contribute to a project"
       tags:
         - project
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Application"
+              allOf:
+                - $ref: "#/components/schemas/Application"
+              properties:
+                status:
+                  readOnly: true
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/Application"
+              allOf:
+                - $ref: "#/components/schemas/Application"
+              properties:
+                status:
+                  readOnly: true
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/Application"
+              allOf:
+                - $ref: "#/components/schemas/Application"
+              properties:
+                status:
+                  readOnly: true
         required: true
       security:
         - jwtAuth: []
@@ -224,33 +616,27 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Application"
+                $ref: "#/components/schemas/ApplicationGet"
+          description: ""
+        "400":
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+          description: ""
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
           description: ""
   /api/project/application/{id}/:
     get:
       operationId: project_application_retrieve
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
-      tags:
-        - project
-      security:
-        - jwtAuth: []
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Application"
-          description: ""
-    put:
-      operationId: project_application_update
       description: |-
-        Overwrite put method implementation of the generic APIView to not allow it,
-        because we only want to modify the application's status and no other field.
+        Retrieve an application by its id that is made by the authenticated user 
+        or that is for a project that he owns
       parameters:
         - in: path
           name: id
@@ -259,18 +645,6 @@ paths:
           required: true
       tags:
         - project
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Application"
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/Application"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/Application"
-        required: true
       security:
         - jwtAuth: []
       responses:
@@ -278,10 +652,29 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Application"
+                $ref: "#/components/schemas/ApplicationGet"
+          description: ""
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+          description: ""
+        "404":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    default: "Not found."
           description: ""
     patch:
       operationId: project_application_partial_update
+      description: |-
+        Update application status with the provided id. Only the owner of the
+        project that it's meant for can update the application status
       parameters:
         - in: path
           name: id
@@ -294,13 +687,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PatchedApplication"
+              type: object
+              properties:
+                status:
+                  type: string
+                  default: "denied"
           application/x-www-form-urlencoded:
             schema:
-              $ref: "#/components/schemas/PatchedApplication"
+              type: object
+              properties:
+                status:
+                  type: string
+                  default: "denied"
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/PatchedApplication"
+              type: object
+              properties:
+                status:
+                  type: string
+                  default: "denied"
       security:
         - jwtAuth: []
       responses:
@@ -308,10 +713,42 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Application"
+                allOf:
+                  - $ref: "#/components/schemas/ApplicationGet"
+                properties:
+                  status:
+                    type: string
+                    default: "denied"
+          description: ""
+        "400":
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+          description: ""
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+          description: ""
+        "404":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    default: "Not found."
           description: ""
     delete:
       operationId: project_application_destroy
+      description: |-
+        Delete application with the provided id. Only the one who created the 
+        application or the owner of the project that it's meant for can delete 
+        the application
       parameters:
         - in: path
           name: id
@@ -325,187 +762,21 @@ paths:
       responses:
         "204":
           description: No response body
-  /api/user/{id}/stats/:
-    get:
-      operationId: user_stats_retrieve
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
-      tags:
-        - user
-      security:
-        - jwtAuth: []
-        - {}
-      responses:
-        "200":
+        "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserSerializerWithStats"
+                $ref: "#/components/schemas/UnauthorizedError"
           description: ""
-  /api/user/login/:
-    post:
-      operationId: user_login_create
-      description: |-
-        Takes a set of user credentials and returns an access and refresh JSON web
-        token pair to prove the authentication of those credentials.
-      tags:
-        - user
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TokenObtainPair"
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/TokenObtainPair"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/TokenObtainPair"
-        required: true
-      responses:
-        "200":
+        "404":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TokenObtainPair"
-          description: ""
-  /api/user/password-reset/:
-    post:
-      operationId: user_password_reset_create
-      description: |-
-        Send an email to the user containing a url with a PasswordResetToken
-        to send a patch request to with the new password
-      tags:
-        - user
-      security:
-        - jwtAuth: []
-        - {}
-      responses:
-        "200":
-          description: No response body
-  /api/user/password-reset/{id}/{token}/:
-    patch:
-      operationId: user_password_reset_partial_update
-      description: |-
-        Validate the PasswordResetToken and set the new password
-        provided by the user
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: token
-          schema:
-            type: string
-          required: true
-      tags:
-        - user
-      security:
-        - jwtAuth: []
-        - {}
-      responses:
-        "200":
-          description: No response body
-  /api/user/register/:
-    post:
-      operationId: user_register_create
-      tags:
-        - user
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UserSerializerWithToken"
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/UserSerializerWithToken"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/UserSerializerWithToken"
-        required: true
-      security:
-        - jwtAuth: []
-        - {}
-      responses:
-        "201":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserSerializerWithToken"
-          description: ""
-  /api/user/skill/:
-    post:
-      operationId: user_skill_create
-      tags:
-        - user
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Skill"
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/Skill"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/Skill"
-      security:
-        - jwtAuth: []
-      responses:
-        "201":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Skill"
-          description: ""
-  /api/user/skill/{id}/:
-    delete:
-      operationId: user_skill_destroy
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: integer
-          required: true
-      tags:
-        - user
-      security:
-        - jwtAuth: []
-      responses:
-        "204":
-          description: No response body
-  /api/user/token/refresh/:
-    post:
-      operationId: user_token_refresh_create
-      description: |-
-        Takes a refresh type JSON web token and returns an access type JSON web
-        token if the refresh token is valid.
-      tags:
-        - user
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TokenRefresh"
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/TokenRefresh"
-          multipart/form-data:
-            schema:
-              $ref: "#/components/schemas/TokenRefresh"
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TokenRefresh"
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    default: "Not found."
           description: ""
 components:
   schemas:
@@ -514,14 +785,44 @@ components:
       properties:
         id:
           type: integer
+          default: 1
           readOnly: true
         status:
           $ref: "#/components/schemas/StatusEnum"
         project:
           type: integer
+          default: 1
       required:
         - id
         - project
+    ApplicationGet:
+      type: object
+      properties:
+        id:
+          type: integer
+          default: 1
+          readOnly: true
+        status:
+          $ref: "#/components/schemas/StatusEnum"
+        project_id:
+          type: integer
+          default: 1
+        project_name:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        skills:
+          type: array
+          items:
+            type: object
+            properties:
+              language:
+                $ref: "#/components/schemas/LanguageEnum"
+              level:
+                $ref: "#/components/schemas/LevelEnum"
     LanguageEnum:
       enum:
         - C++
@@ -552,16 +853,6 @@ components:
         * `beginner` - Beginner
         * `experienced` - Experienced
         * `expert` - Expert
-    PatchedApplication:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        status:
-          $ref: "#/components/schemas/StatusEnum"
-        project:
-          type: integer
     PatchedProject:
       type: object
       properties:
@@ -577,12 +868,15 @@ components:
           maxLength: 255
         maximum_collaborators:
           type: integer
+          default: 5
         completed:
           type: boolean
+          default: false
         collaborators:
           type: array
           items:
             type: integer
+            default: 1
     Project:
       type: object
       properties:
@@ -615,39 +909,12 @@ components:
       required:
         - id
         - name
-    ProjectCreate:
-      type: object
-      properties:
-        id:
-          type: integer
-          default: 1
-          readOnly: true
-        name:
-          type: string
-          maxLength: 255
-        description:
-          type: string
-          nullable: true
-          maxLength: 255
-        maximum_collaborators:
-          type: integer
-          default: 5
-        completed:
-          type: boolean
-          default: false
-        collaborators:
-          type: array
-          items:
-            type: integer
-            default: 1
-      required:
-        - id
-        - name
     Skill:
       type: object
       properties:
         id:
           type: integer
+          default: 1
           readOnly: true
         language:
           $ref: "#/components/schemas/LanguageEnum"
@@ -703,6 +970,7 @@ components:
         id:
           type: integer
           readOnly: true
+          default: 1
         username:
           type: string
           description:
@@ -738,10 +1006,14 @@ components:
           type: integer
           readOnly: true
         skills:
-          type: object
-          additionalProperties:
-            type: string
-          readOnly: true
+          type: array
+          items:
+            type: object
+            properties:
+              language:
+                $ref: "#/components/schemas/LanguageEnum"
+              level:
+                $ref: "#/components/schemas/LevelEnum"
       required:
         - email
         - id
@@ -755,6 +1027,7 @@ components:
         id:
           type: integer
           readOnly: true
+          default: 1
         username:
           type: string
           description:
@@ -788,9 +1061,7 @@ components:
           nullable: true
           maxLength: 255
         token:
-          type: object
-          additionalProperties:
-            type: string
+          $ref: "#/components/schemas/TokenObtainPair"
           readOnly: true
       required:
         - email
