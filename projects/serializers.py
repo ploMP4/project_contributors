@@ -44,12 +44,16 @@ class ApplicationSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     def validate(self, data: Dict[Any, Any]) -> Dict[Any, Any]:
-        if (
-            data.get("project")
-            and data.get("user")
-            and data["project"].owner == data["user"]
-        ):
-            raise serializers.ValidationError("User cannot apply to his own project")
+        if data.get("project") and data.get("user"):
+            if data["project"].owner == data["user"]:
+                raise serializers.ValidationError(
+                    "User cannot apply to his own project"
+                )
+
+            if data["user"] in data["project"].collaborators.all():
+                raise serializers.ValidationError(
+                    "User cannot apply to a project he is already a collaborator at"
+                )
 
         return data
 
@@ -65,6 +69,10 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
         if validated_data.get("project") or validated_data.get("user"):
             raise serializers.ValidationError("Only status field is editable")
+
+        collaborator_count = len(instance.project.collaborators.all())
+        if collaborator_count < instance.project.maximum_collaborators:
+            raise serializers.ValidationError("Cannot exceed maximum_collaborators")
 
         if validated_data["status"] == ApplicationStatus.ACCEPTED:
             instance.project.collaborators.add(instance.user)
