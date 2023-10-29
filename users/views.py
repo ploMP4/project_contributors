@@ -102,6 +102,7 @@ class CreateSkillView(CreateAPIView):
 
 class DeleteSkillView(DestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SkillSerializer
 
     def get_queryset(self):
         queryset = Skill.objects.filter(id=self.kwargs["pk"], user=self.request.user)

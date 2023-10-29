@@ -260,7 +260,7 @@ class ApplicationTests(APITestCase):
             response.data,
         )
 
-    def test_project_delete(self):
+    def test_application_delete(self):
         view = RetrieveUpdateDeleteApplicationView().as_view()
         url = reverse("application_retrieve_update_delete", kwargs={"pk": 1})
 

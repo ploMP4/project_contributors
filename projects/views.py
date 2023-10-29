@@ -1,8 +1,7 @@
 from django.db.models import F, Q, Count
 from django.db.models.query import Prefetch
-from rest_framework import permissions, status
+from rest_framework import permissions
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.response import Response
 
 from .models import Project, Application
 from .serializers import ApplicationSerializer, ProjectSerializer
@@ -63,13 +62,3 @@ class RetrieveUpdateDeleteApplicationView(RetrieveUpdateDestroyAPIView):
             Q(project__owner=self.request.user) | Q(user=self.request.user),
         )
         return queryset
-
-    def put(self, request, *args, **kwargs):
-        """
-        Overwrite put method implementation of the generic APIView to not allow it,
-        because we only want to modify the application's status and no other field.
-        """
-        return Response(
-            {"message": "Method is not allowed"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
