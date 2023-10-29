@@ -26,12 +26,11 @@ class RetrieveUserWithStatsView(RetrieveAPIView):
     serializer_class = UserSerializerWithStats
 
     def get_queryset(self):
-        queryset = (
+        return (
             User.objects.filter(id=self.kwargs["pk"])
             .annotate(projects_created=Count("project"))
             .annotate(projects_contributed=Count("collaborator_set"))
         )
-        return queryset
 
 
 class RegisterUserView(CreateAPIView):
@@ -40,6 +39,8 @@ class RegisterUserView(CreateAPIView):
 
 
 class RequestPasswordResetUserView(APIView):
+    permission_classes = [permissions.AllowAny]
+
     def post(self, request):
         """
         Send an email to the user containing a url with a PasswordResetToken
@@ -59,17 +60,19 @@ class RequestPasswordResetUserView(APIView):
             )
 
             return Response(
-                {"message": f"Email has been sent to {user.email}"},
+                {"detail": f"Email has been sent to {user.email}"},
                 status=status.HTTP_200_OK,
             )
         except ObjectDoesNotExist:
             return Response(
-                {"message": "There is no user with the provided email address"},
+                {"detail": "Not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
 
 class ResetPasswordUserView(APIView):
+    permission_classes = [permissions.AllowAny]
+
     def patch(self, request, pk, token):
         """
         Validate the PasswordResetToken and set the new password
@@ -85,12 +88,12 @@ class ResetPasswordUserView(APIView):
             user.save()
 
             return Response(
-                {"message": "Password reset successfully"},
+                {"detail": "Password reset successfully"},
                 status=status.HTTP_200_OK,
             )
         except ValidationError as e:
             return Response(
-                {"message": e.detail},
+                {"detail": e.detail},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -105,5 +108,4 @@ class DeleteSkillView(DestroyAPIView):
     serializer_class = SkillSerializer
 
     def get_queryset(self):
-        queryset = Skill.objects.filter(id=self.kwargs["pk"], user=self.request.user)
-        return queryset
+        return Skill.objects.filter(id=self.kwargs["pk"], user=self.request.user)

@@ -1,7 +1,8 @@
 from django.db.models import F, Q, Count
 from django.db.models.query import Prefetch
-from rest_framework import permissions
+from rest_framework import permissions, status
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.mixins import Response
 
 from .models import Project, Application
 from .serializers import ApplicationSerializer, ProjectSerializer
@@ -15,13 +16,11 @@ class ListCreateProjectView(ListCreateAPIView):
         """
         Return to the user only the projects that have open seats
         """
-        queryset = (
+        return (
             Project.objects.prefetch_related(Prefetch("collaborators"))
             .annotate(Count("collaborators"))
             .filter(collaborators__count__lt=F("maximum_collaborators"))
         )
-
-        return queryset
 
 
 class RetrieveUpdateDeleteProjectView(RetrieveUpdateDestroyAPIView):
@@ -48,10 +47,9 @@ class ListCreateApplicationView(ListCreateAPIView):
         A user can only see applications made by him or applications that
         are for a project he owns
         """
-        queryset = Application.objects.filter(
+        return Application.objects.filter(
             Q(project__owner=self.request.user) | Q(user=self.request.user)
         )
-        return queryset
 
 
 class RetrieveUpdateDeleteApplicationView(RetrieveUpdateDestroyAPIView):
@@ -63,7 +61,7 @@ class RetrieveUpdateDeleteApplicationView(RetrieveUpdateDestroyAPIView):
         A user can only see/delete applications made by him or applications that
         are for a project he owns
         """
-        queryset = Application.objects.filter(
+        return Application.objects.filter(
             Q(id=self.kwargs["pk"]),
             Q(project__owner=self.request.user) | Q(user=self.request.user),
         )
