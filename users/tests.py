@@ -1,3 +1,5 @@
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core import mail
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIRequestFactory, force_authenticate
 from rest_framework_simplejwt.views import (
@@ -5,7 +7,14 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from .views import DeleteSkillView, RegisterUserView, CreateSkillView
+from .views import (
+    DeleteSkillView,
+    RegisterUserView,
+    CreateSkillView,
+    RequestPasswordResetUserView,
+    ResetPasswordUserView,
+    RetrieveUserWithStatsView,
+)
 from .models import Language, Level, Skill, User
 
 
@@ -107,6 +116,60 @@ class UserTests(APITestCase):
         response = view(request)
 
         self.assertEqual(response.status_code, 401, response.data)
+
+    def test_retrieve_user_stats(self):
+        view = RetrieveUserWithStatsView.as_view()
+        url = reverse("user_stats", kwargs={"pk": 1})
+
+        request = self.factory.get(url, format="json")
+        response = view(request, pk=1)
+
+        self.assertEqual(response.status_code, 200, response.data)
+
+    def test_request_password_reset(self):
+        view = RequestPasswordResetUserView.as_view()
+        url = reverse("password_reset_request")
+
+        data = {"email": "bob@mail.com"}
+        request = self.factory.post(url, data, format="json")
+        response = view(request)
+
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(len(mail.outbox), 1, response.data)
+        self.assertEqual(
+            mail.outbox[0].subject, "Project Contributors Password Reset", response.data
+        )
+
+    def test_request_password_reset_fail(self):
+        view = RequestPasswordResetUserView.as_view()
+        url = reverse("password_reset_request")
+
+        data = {"email": "no-user@mail.com"}
+        request = self.factory.post(url, data, format="json")
+        response = view(request)
+
+        self.assertEqual(response.status_code, 404, response.data)
+
+    def test_reset_user_password(self):
+        view = ResetPasswordUserView.as_view()
+        token = PasswordResetTokenGenerator().make_token(self.user)
+        url = reverse("password_reset_confirm", kwargs={"pk": 1, "token": token})
+
+        data = {"password": "new_pass"}
+        request = self.factory.patch(url, data, format="json")
+        response = view(request, pk=1, token=token)
+
+        self.assertEqual(response.status_code, 200, response.data)
+
+    def test_reset_user_password_fail(self):
+        view = ResetPasswordUserView.as_view()
+        url = reverse("password_reset_confirm", kwargs={"pk": 1, "token": "no-token"})
+
+        data = {"password": "new_pass"}
+        request = self.factory.patch(url, data, format="json")
+        response = view(request, pk=1, token="no-token")
+
+        self.assertEqual(response.status_code, 400, response.data)
 
 
 class SkillTests(APITestCase):
