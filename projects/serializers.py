@@ -47,6 +47,11 @@ class ApplicationSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
+        if instance.user == self.context["request"].user:
+            raise serializers.ValidationError(
+                "User cannot modify his own application status"
+            )
+
         if validated_data.get("project") or validated_data.get("user"):
             raise serializers.ValidationError("Only status field is editable")
 
