@@ -71,7 +71,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Only status field is editable")
 
         collaborator_count = len(instance.project.collaborators.all())
-        if collaborator_count < instance.project.maximum_collaborators:
+        if collaborator_count >= instance.project.maximum_collaborators:
             raise serializers.ValidationError("Cannot exceed maximum_collaborators")
 
         if validated_data["status"] == ApplicationStatus.ACCEPTED:
