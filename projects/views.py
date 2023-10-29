@@ -54,11 +54,20 @@ class RetrieveUpdateDeleteApplicationView(RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         """
-        A user can only see/modify applications made by him or applications that
+        A user can only see/delete applications made by him or applications that
         are for a project he owns
         """
         queryset = Application.objects.filter(
             Q(id=self.kwargs["pk"]),
             Q(project__owner=self.request.user) | Q(user=self.request.user),
         )
-        return queryset
+
+    def put(self, request, pk):
+        """
+        Overwrite put method implementation of the generic APIView to not allow it,
+        because we only want to modify the application's status and no other field.
+        """
+        return Response(
+            "Method not allowed",
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+        )
