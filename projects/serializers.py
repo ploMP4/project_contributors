@@ -7,6 +7,17 @@ from .models import Application, ApplicationStatus, Project
 class ProjectSerializer(serializers.ModelSerializer):
     owner = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
+    def update(self, instance, validated_data):
+        if (
+            validated_data.get("collaborators")
+            and instance.owner in validated_data["collaborators"]
+        ):
+            raise serializers.ValidationError(
+                "User cannot be a collaborator on his own project"
+            )
+
+        return super().update(instance, validated_data)
+
     def to_representation(self, instance):
         """
         Display the usernames of the project's creator and collaborators
