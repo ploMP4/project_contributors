@@ -4,13 +4,7 @@
 
 _Make sure you have docker with docker-compose installed_
 
-To get started with the project first run:
-
-```bash
-docker compose build
-```
-
-then run:
+To get started with the project run:
 
 ```bash
 docker compose up
